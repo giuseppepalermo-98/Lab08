@@ -7,10 +7,12 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import it.polito.tdp.extflightdelays.model.Airline;
 import it.polito.tdp.extflightdelays.model.Airport;
 import it.polito.tdp.extflightdelays.model.Flight;
+import it.polito.tdp.extflightdelays.model.Volo;
 
 public class ExtFlightDelaysDAO {
 
@@ -37,9 +39,9 @@ public class ExtFlightDelaysDAO {
 		}
 	}
 
-	public List<Airport> loadAllAirports() {
+	public void loadAllAirports(Map<Integer, Airport>mappaAirport) {
 		String sql = "SELECT * FROM airports";
-		List<Airport> result = new ArrayList<Airport>();
+		//List<Airport> result = new ArrayList<Airport>();
 
 		try {
 			Connection conn = ConnectDB.getConnection();
@@ -47,14 +49,19 @@ public class ExtFlightDelaysDAO {
 			ResultSet rs = st.executeQuery();
 
 			while (rs.next()) {
-				Airport airport = new Airport(rs.getInt("ID"), rs.getString("IATA_CODE"), rs.getString("AIRPORT"),
+				if(!mappaAirport.containsKey(rs.getInt("ID"))) {
+				
+					Airport airport = new Airport(rs.getInt("ID"), rs.getString("IATA_CODE"), rs.getString("AIRPORT"),
 						rs.getString("CITY"), rs.getString("STATE"), rs.getString("COUNTRY"), rs.getDouble("LATITUDE"),
 						rs.getDouble("LONGITUDE"), rs.getDouble("TIMEZONE_OFFSET"));
-				result.add(airport);
+				
+					mappaAirport.put(rs.getInt("ID"), airport);
+				}
+				//result.add(airport);
 			}
 
 			conn.close();
-			return result;
+			//return result;
 
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -82,6 +89,36 @@ public class ExtFlightDelaysDAO {
 				result.add(flight);
 			}
 
+			conn.close();
+			return result;
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+			System.out.println("Errore connessione al database");
+			throw new RuntimeException("Error Connection Database");
+		}
+	}
+	
+	public List<Volo> loadAllFlightsAmmissibili(int distanzaMedia) {
+		
+		String sql = "SELECT DISTINCT ORIGIN_AIRPORT_ID, DESTINATION_AIRPORT_ID, DISTANCE "+
+				"FROM flights "+
+				"WHERE DISTANCE >=? "+
+				"GROUP BY ORIGIN_AIRPORT_ID, DESTINATION_AIRPORT_ID";
+		
+		List<Volo> result = new LinkedList<Volo>();
+
+		try {
+			Connection conn = ConnectDB.getConnection();
+			PreparedStatement st = conn.prepareStatement(sql);
+			st.setInt(1, distanzaMedia);
+			ResultSet rs = st.executeQuery();
+
+			while (rs.next()) {
+				Volo v = new Volo(rs.getInt("ORIGIN_AIRPORT_ID"), rs.getInt("DESTINATION_AIRPORT_ID"), rs.getInt("DISTANCE"));
+				result.add(v);
+			}
+			
 			conn.close();
 			return result;
 

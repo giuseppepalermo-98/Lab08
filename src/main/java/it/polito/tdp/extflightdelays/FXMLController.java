@@ -4,10 +4,12 @@
 
 package it.polito.tdp.extflightdelays;
 
+import java.io.EOFException;
 import java.net.URL;
 import java.util.ResourceBundle;
 
 import it.polito.tdp.extflightdelays.model.Model;
+import it.polito.tdp.extflightdelays.model.Volo;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -35,7 +37,24 @@ public class FXMLController {
 
     @FXML
     void doAnalizzaAeroporti(ActionEvent event) {
-    	//TODO
+    	this.txtResult.clear();
+    	int distanzaMedia=0;
+    	try {
+    	distanzaMedia= Integer.parseInt(this.distanzaMinima.getText());
+    	}catch(Exception e){
+    		System.out.println("Devi inserier solo caratteri validi(numeri)!");
+    	}
+    	if(distanzaMedia!=0) {
+    	model.creaGrafo(distanzaMedia);
+    	
+    	StringBuilder sb = new StringBuilder();
+    	
+    	sb.append(String.format("Il numero di vertici: %d \n", model.nVertici()));
+    	sb.append(String.format("Numero di archi: %d \n", model.nArchi()));
+    	sb.append(model.listaArchi());
+    	
+    	this.txtResult.appendText(sb.toString());
+    	}
     }
 
     @FXML // This method is called by the FXMLLoader when initialization is complete
